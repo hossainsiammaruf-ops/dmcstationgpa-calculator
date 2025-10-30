@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, GraduationCap, Activity, Wrench, AlertCircle, Building2, CheckCircle, Info } from 'lucide-react';
+import { ChevronRight, GraduationCap, Activity, Wrench, AlertCircle, Building2, CheckCircle, Info, ArrowLeft, Calculator, XCircle } from 'lucide-react';
 
 const GPACalculator = () => {
   const [step, setStep] = useState(1);
@@ -20,6 +20,123 @@ const GPACalculator = () => {
   const [resultMessage, setResultMessage] = useState('');
   const [showResultBox, setShowResultBox] = useState(false);
   const [eligibilityStatus, setEligibilityStatus] = useState('');
+
+  const [medicalStep, setMedicalStep] = useState('main');
+  const [physicsGPA, setPhysicsGPA] = useState('');
+  const [chemistryGPA, setChemistryGPA] = useState('');
+  const [biologyGPA, setBiologyGPA] = useState('');
+  const [medicalEligible, setMedicalEligible] = useState(false);
+  const [eligibilityReasons, setEligibilityReasons] = useState([]);
+  const [medicalGPAMarks, setMedicalGPAMarks] = useState(0);
+  const [studentType, setStudentType] = useState('');
+  const [finalMedicalMarks, setFinalMedicalMarks] = useState(0);
+  const [medicalCorrectAnswers, setMedicalCorrectAnswers] = useState('');
+  const [medicalWrongAnswers, setMedicalWrongAnswers] = useState('');
+  const [medicalMCQMarks, setMedicalMCQMarks] = useState(0);
+
+  const normalizeDecimal = (value) => {
+    return value.replace(',', '.');
+  };
+
+  const validateGPA = (value) => {
+    const num = parseFloat(value);
+    return !isNaN(num) && num >= 0 && num <= 5;
+  };
+
+  const checkMedicalEligibility = () => {
+    const ssc = parseFloat(normalizeDecimal(sscGPA)) || 0;
+    const hsc = parseFloat(normalizeDecimal(hscGPA)) || 0;
+    const physics = parseFloat(normalizeDecimal(physicsGPA)) || 0;
+    const chemistry = parseFloat(normalizeDecimal(chemistryGPA)) || 0;
+    const biology = parseFloat(normalizeDecimal(biologyGPA)) || 0;
+
+    const reasons = [];
+    let eligible = true;
+
+    if (!sscGPA || !hscGPA || !physicsGPA || !chemistryGPA || !biologyGPA) {
+      alert('Please fill all fields');
+      return;
+    }
+
+    if (!validateGPA(sscGPA) || !validateGPA(hscGPA) || !validateGPA(physicsGPA) || 
+        !validateGPA(chemistryGPA) || !validateGPA(biologyGPA)) {
+      alert('All GPA values must be between 0 and 5');
+      return;
+    }
+
+    if (ssc + hsc < 8.50) {
+      eligible = false;
+      reasons.push('Combined SSC + HSC GPA is ' + (ssc + hsc).toFixed(2) + ', must be at least 8.50');
+    }
+
+    if (ssc < 4.00) {
+      eligible = false;
+      reasons.push('SSC GPA is ' + ssc.toFixed(2) + ', must be at least 4.00');
+    }
+    if (hsc < 4.00) {
+      eligible = false;
+      reasons.push('HSC GPA is ' + hsc.toFixed(2) + ', must be at least 4.00');
+    }
+
+    if (biology < 3.50) {
+      eligible = false;
+      reasons.push('Biology GPA is ' + biology.toFixed(2) + ', must be at least 3.50');
+    }
+
+    setMedicalEligible(eligible);
+    setEligibilityReasons(reasons);
+    setMedicalStep('eligibilityResult');
+  };
+
+  const calculateMedicalGPAMarks = () => {
+    const hsc = parseFloat(normalizeDecimal(hscGPA)) || 0;
+    const ssc = parseFloat(normalizeDecimal(sscGPA)) || 0;
+    const total = (hsc * 12) + (ssc * 8);
+    setMedicalGPAMarks(total);
+    setMedicalStep('gpaResult');
+  };
+
+  const calculateApproxResult = () => {
+    const correct = parseFloat(medicalCorrectAnswers) || 0;
+    const wrong = parseFloat(medicalWrongAnswers) || 0;
+    
+    if (correct > 100 || wrong > 100) {
+      alert('Answers cannot exceed 100');
+      return;
+    }
+    
+    if (correct + wrong > 100) {
+      alert('Total answers cannot exceed 100');
+      return;
+    }
+    
+    const mcqScore = correct - (wrong * 0.25);
+    setMedicalMCQMarks(mcqScore);
+    
+    let total = medicalGPAMarks + mcqScore;
+    if (studentType === '2nd') {
+      total = Math.max(0, total - 3);
+    }
+    setFinalMedicalMarks(total);
+    setMedicalStep('finalResult');
+  };
+
+  const resetMedical = () => {
+    setMedicalStep('main');
+    setSscGPA('');
+    setHscGPA('');
+    setPhysicsGPA('');
+    setChemistryGPA('');
+    setBiologyGPA('');
+    setMedicalEligible(false);
+    setEligibilityReasons([]);
+    setMedicalGPAMarks(0);
+    setStudentType('');
+    setFinalMedicalMarks(0);
+    setMedicalCorrectAnswers('');
+    setMedicalWrongAnswers('');
+    setMedicalMCQMarks(0);
+  };
 
   const calculateGPAMarks = () => {
     const hsc = parseFloat(hscGPA) || 0;
@@ -112,6 +229,7 @@ const GPACalculator = () => {
     setResultMessage('');
     setShowResultBox(false);
     setEligibilityStatus('');
+    resetMedical();
   };
 
   const getUniversityDisplayName = () => {
@@ -298,15 +416,581 @@ const GPACalculator = () => {
     { name: 'Agricultural University Cluster', key: 'agri', gradient: 'from-green-600 to-green-800', abbr: 'AGRI' }
   ];
 
+  if (step === 3 && admissionType === 'medical') {
+    if (medicalStep === 'main') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+          </div>
+
+          <div className="w-full max-w-2xl relative z-10">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-red-500 via-white to-red-500 bg-clip-text text-transparent mb-2 tracking-tight">
+                MEDICAL ADMISSION
+              </h1>
+              <h2 className="text-xl md:text-2xl font-semibold text-white/90">
+                MBBS & BDS Calculator
+              </h2>
+            </div>
+
+            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-8">
+              <div className="space-y-6">
+                <h3 className="text-2xl font-bold text-white text-center mb-8">
+                  Choose an Option
+                </h3>
+                <div className="grid gap-4">
+                  <button
+                    onClick={() => setMedicalStep('eligibility')}
+                    className="group p-6 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-red-500/50 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/30"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-red-700 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <CheckCircle className="w-7 h-7 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <h4 className="text-xl font-bold text-white">Check Eligibility</h4>
+                        <p className="text-white/60 text-sm">Verify if you meet the requirements</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setMedicalStep('policy')}
+                    className="group p-6 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/50 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/30"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Info className="w-7 h-7 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <h4 className="text-xl font-bold text-white">ভর্তি নীতিমালা</h4>
+                        <p className="text-white/60 text-sm">Admission Guidelines</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setStep(2)}
+                  className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all duration-300 border border-white/20"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (medicalStep === 'eligibility') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+          </div>
+
+          <div className="w-full max-w-2xl relative z-10">
+            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-8">
+              <div className="space-y-6">
+                <h3 className="text-2xl font-bold text-white text-center mb-8">
+                  Medical Eligibility Check
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-white/80 font-medium mb-2">
+                      SSC GPA (max 5.00)
+                    </label>
+                    <input
+                      type="text"
+                      value={sscGPA}
+                      onChange={(e) => setSscGPA(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
+                      placeholder="e.g., 5.00 or 5,00"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-white/80 font-medium mb-2">
+                      HSC GPA (max 5.00)
+                    </label>
+                    <input
+                      type="text"
+                      value={hscGPA}
+                      onChange={(e) => setHscGPA(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
+                      placeholder="e.g., 5.00 or 5,00"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-white/80 font-medium mb-2">
+                      Physics GPA (max 5.00)
+                    </label>
+                    <input
+                      type="text"
+                      value={physicsGPA}
+                      onChange={(e) => setPhysicsGPA(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
+                      placeholder="e.g., 5.00 or 5,00"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-white/80 font-medium mb-2">
+                      Chemistry GPA (max 5.00)
+                    </label>
+                    <input
+                      type="text"
+                      value={chemistryGPA}
+                      onChange={(e) => setChemistryGPA(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
+                      placeholder="e.g., 5.00 or 5,00"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-white/80 font-medium mb-2">
+                      Biology GPA (max 5.00)
+                    </label>
+                    <input
+                      type="text"
+                      value={biologyGPA}
+                      onChange={(e) => setBiologyGPA(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
+                      placeholder="e.g., 5.00 or 5,00"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => setMedicalStep('main')}
+                    className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all duration-300 border border-white/20 flex items-center justify-center gap-2"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    Back
+                  </button>
+                  <button
+                    onClick={checkMedicalEligibility}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-full font-semibold shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/70 transition-all duration-300 transform hover:scale-105"
+                  >
+                    Check Eligibility
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (medicalStep === 'eligibilityResult') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+          </div>
+
+          <div className="w-full max-w-2xl relative z-10">
+            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-8">
+              <div className="space-y-6">
+                <h3 className="text-2xl font-bold text-white text-center mb-6">
+                  Eligibility Result
+                </h3>
+
+                <div className={'p-8 rounded-2xl border-2 ' + (medicalEligible ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30')}>
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    {medicalEligible ? (
+                      <CheckCircle className="w-12 h-12 text-green-400" />
+                    ) : (
+                      <XCircle className="w-12 h-12 text-red-400" />
+                    )}
+                    <h4 className={'text-2xl font-bold ' + (medicalEligible ? 'text-green-400' : 'text-red-400')}>
+                      {medicalEligible ? 'ELIGIBLE' : 'NOT ELIGIBLE'}
+                    </h4>
+                  </div>
+                  <p className="text-white/90 text-center text-lg">
+                    {medicalEligible 
+                      ? 'You meet all the requirements for Medical Admission' 
+                      : 'You do not meet the minimum requirements for Medical Admission'}
+                  </p>
+
+                  {!medicalEligible && eligibilityReasons.length > 0 && (
+                    <div className="mt-6 pt-6 border-t border-white/20">
+                      <p className="text-white/70 text-sm font-semibold mb-3">Reasons:</p>
+                      <ul className="space-y-2">
+                        {eligibilityReasons.map((reason, index) => (
+                          <li key={index} className="text-white/80 text-sm flex items-start gap-2">
+                            <span className="text-red-400 mt-1">•</span>
+                            <span>{reason}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setMedicalStep('eligibility')}
+                    className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all duration-300 border border-white/20 flex items-center justify-center gap-2"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    Back
+                  </button>
+                  {medicalEligible && (
+                    <button
+                      onClick={() => setMedicalStep('gpaCalc')}
+                      className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-full font-semibold shadow-lg shadow-emerald-500/50 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                    >
+                      <Calculator className="w-5 h-5" />
+                      Calculate GPA Marks
+                    </button>
+                  )}
+                  {!medicalEligible && (
+                    <button
+                      onClick={resetCalculator}
+                      className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-full font-semibold shadow-lg shadow-red-500/50 transition-all duration-300 transform hover:scale-105"
+                    >
+                      Try Again
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (medicalStep === 'gpaCalc') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+          </div>
+
+          <div className="w-full max-w-2xl relative z-10">
+            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-8">
+              <div className="space-y-6">
+                <h3 className="text-2xl font-bold text-white text-center mb-6">
+                  Calculate Your GPA Marks
+                </h3>
+
+                <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl p-6 backdrop-blur-sm">
+                  <h4 className="text-white font-semibold mb-4 text-center">Formula</h4>
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <p className="text-white text-center text-lg font-mono">
+                      Total Marks = (HSC GPA × 12) + (SSC GPA × 8)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                    <p className="text-white/60 text-sm mb-2">Your SSC GPA</p>
+                    <p className="text-white text-3xl font-bold">{parseFloat(normalizeDecimal(sscGPA)).toFixed(2)}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                    <p className="text-white/60 text-sm mb-2">Your HSC GPA</p>
+                    <p className="text-white text-3xl font-bold">{parseFloat(normalizeDecimal(hscGPA)).toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={calculateMedicalGPAMarks}
+                  className="w-full px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-full font-semibold text-lg shadow-lg shadow-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/70 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                >
+                  <Calculator className="w-5 h-5" />
+                  Calculate Now
+                </button>
+
+                <button
+                  onClick={() => setMedicalStep('eligibilityResult')}
+                  className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all duration-300 border border-white/20 flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (medicalStep === 'gpaResult') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+          </div>
+
+          <div className="w-full max-w-2xl relative z-10">
+            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-8">
+              <div className="space-y-6">
+                <h3 className="text-2xl font-bold text-white text-center mb-6">
+                  Your GPA Marks Result
+                </h3>
+
+                <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-700/20 border-2 border-emerald-500/30 rounded-2xl p-8 text-center">
+                  <p className="text-white/70 text-sm mb-3">Total GPA Marks</p>
+                  <p className="text-6xl font-bold text-white mb-2">{medicalGPAMarks.toFixed(2)}</p>
+                  <p className="text-white/60 text-sm">out of 100</p>
+                  
+                  <div className="mt-6 pt-6 border-t border-white/20">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-white/60 mb-1">HSC × 12</p>
+                        <p className="text-white font-bold text-lg">{(parseFloat(normalizeDecimal(hscGPA)) * 12).toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-white/60 mb-1">SSC × 8</p>
+                        <p className="text-white font-bold text-lg">{(parseFloat(normalizeDecimal(sscGPA)) * 8).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl p-6 backdrop-blur-sm">
+                  <p className="text-white text-center font-medium mb-4">
+                    Want to calculate your approximate result?
+                  </p>
+                  <p className="text-white/70 text-sm text-center">
+                    Enter your expected MCQ performance
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-white/80 font-medium mb-2">
+                      Expected Correct Answers (out of 100 MCQ)
+                    </label>
+                    <input
+                      type="number"
+                      max="100"
+                      value={medicalCorrectAnswers}
+                      onChange={(e) => setMedicalCorrectAnswers(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                      placeholder="e.g., 85"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-white/80 font-medium mb-2">
+                      Expected Wrong Answers (out of 100 MCQ)
+                    </label>
+                    <input
+                      type="number"
+                      max="100"
+                      value={medicalWrongAnswers}
+                      onChange={(e) => setMedicalWrongAnswers(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                      placeholder="e.g., 10"
+                    />
+                  </div>
+
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <p className="text-white/60 text-xs mb-2">Note: Each wrong answer deducts 0.25 marks</p>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-2xl p-6 backdrop-blur-sm">
+                  <p className="text-white text-center font-medium mb-4">
+                    Select your student type
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setStudentType('1st')}
+                      className={'p-3 border rounded-xl transition-all duration-300 ' + (studentType === '1st' ? 'bg-green-500/20 border-green-500/50' : 'bg-white/5 border-white/10 hover:bg-white/10')}
+                    >
+                      <h4 className="text-base font-bold text-white">1st Timer</h4>
+                      <p className="text-white/60 text-xs">No deduction</p>
+                    </button>
+                    <button
+                      onClick={() => setStudentType('2nd')}
+                      className={'p-3 border rounded-xl transition-all duration-300 ' + (studentType === '2nd' ? 'bg-amber-500/20 border-amber-500/50' : 'bg-white/5 border-white/10 hover:bg-white/10')}
+                    >
+                      <h4 className="text-base font-bold text-white">2nd Timer</h4>
+                      <p className="text-white/60 text-xs">-3 marks</p>
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={calculateApproxResult}
+                  disabled={!medicalCorrectAnswers || !medicalWrongAnswers || !studentType}
+                  className="w-full px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-full font-semibold text-lg shadow-lg shadow-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/70 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  Calculate Final Result
+                </button>
+
+                <button
+                  onClick={() => setMedicalStep('gpaCalc')}
+                  className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all duration-300 border border-white/20 flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (medicalStep === 'finalResult') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+          </div>
+
+          <div className="w-full max-w-2xl relative z-10">
+            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-8">
+              <div className="space-y-6">
+                <h3 className="text-2xl font-bold text-white text-center mb-6">
+                  Final Approximate Result
+                </h3>
+
+                <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-2 border-purple-500/30 rounded-2xl p-8">
+                  <div className="text-center mb-6">
+                    <div className="inline-block px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full mb-4">
+                      <span className="text-purple-300 font-semibold">{studentType === '1st' ? '1st Timer' : '2nd Timer'}</span>
+                    </div>
+                    
+                    <p className="text-white/70 text-sm mb-3">Your Total Approximate Marks</p>
+                    <p className="text-7xl font-bold text-white mb-2">{finalMedicalMarks.toFixed(2)}</p>
+                    <p className="text-white/60">out of 200</p>
+                  </div>
+
+                  <div className="bg-white/10 rounded-xl p-5 border border-white/10">
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                        <span className="text-white/70">GPA Marks</span>
+                        <span className="text-white font-bold">{medicalGPAMarks.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                        <span className="text-white/70">MCQ Score</span>
+                        <span className="text-white font-bold">{medicalMCQMarks.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs pb-3 border-b border-white/10">
+                        <span className="text-white/50">Correct Answers</span>
+                        <span className="text-green-400 font-semibold">{medicalCorrectAnswers}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs pb-3 border-b border-white/10">
+                        <span className="text-white/50">Wrong Answers (-0.25 each)</span>
+                        <span className="text-red-400 font-semibold">{medicalWrongAnswers}</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                        <span className="text-white/70">Subtotal (GPA + MCQ)</span>
+                        <span className="text-emerald-400 font-bold">{(medicalGPAMarks + medicalMCQMarks).toFixed(2)}</span>
+                      </div>
+                      {studentType === '2nd' && (
+                        <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                          <span className="text-white/70">2nd Timer Penalty</span>
+                          <span className="text-red-400 font-bold">-3.00</span>
+                        </div>
+                      )}
+                      <div className="pt-3 flex justify-between items-center">
+                        <span className="text-white font-semibold text-base">Final Total</span>
+                        <span className="text-emerald-400 font-bold text-xl">{finalMedicalMarks.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-5">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-white/80 text-sm">
+                      This is an approximate calculation based on your inputs. Actual results may vary depending on the admission test and university-specific criteria.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={resetCalculator}
+                  className="w-full px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-full font-semibold text-lg shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/70 transition-all duration-300 transform hover:scale-105"
+                >
+                  Calculate Again
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (medicalStep === 'policy') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+          </div>
+
+          <div className="w-full max-w-2xl relative z-10">
+            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-8">
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/50 mb-6">
+                    <Info className="w-12 h-12 text-white animate-pulse" />
+                  </div>
+                  <h3 className="text-3xl font-bold text-white mb-4">
+                    ভর্তি নীতিমালা
+                  </h3>
+                </div>
+
+                <div className="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border-2 border-emerald-500/30 rounded-2xl p-10 text-center backdrop-blur-sm">
+                  <div className="mb-6">
+                    <div className="text-6xl mb-4">🔜</div>
+                    <p className="text-2xl font-bold text-white mb-3">
+                      এই ফিচারটি খুব শীঘ্রই আসছে।
+                    </p>
+                    <p className="text-white/70">
+                      আমরা শীঘ্রই সম্পূর্ণ ভর্তি নীতিমালা প্রকাশ করব
+                    </p>
+                  </div>
+                  
+                  <div className="inline-block px-6 py-3 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                    <span className="text-emerald-300 font-semibold">Coming Soon</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setMedicalStep('main')}
+                  className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all duration-300 border border-white/20 flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
       </div>
 
       <div className="w-full max-w-2xl relative z-10">
-        <div className="text-center mb-8 animate-fade-in">
+        <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-red-500 via-white to-red-500 bg-clip-text text-transparent mb-2 tracking-tight">
             DMC STATION UNIVERSITY
           </h1>
@@ -317,7 +1001,7 @@ const GPACalculator = () => {
 
         <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-8 transition-all duration-500">
           {step === 1 && (
-            <div className="text-center space-y-6 animate-fade-in">
+            <div className="text-center space-y-6">
               <div className="w-24 h-24 mx-auto bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-lg shadow-red-500/50">
                 <GraduationCap className="w-12 h-12 text-white" />
               </div>
@@ -337,7 +1021,7 @@ const GPACalculator = () => {
           )}
 
           {step === 2 && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               <h3 className="text-2xl font-bold text-white text-center mb-8">
                 Choose Admission Type
               </h3>
@@ -399,64 +1083,8 @@ const GPACalculator = () => {
             </div>
           )}
 
-          {step === 3 && (
-            <div className="space-y-6 animate-fade-in">
-              <h3 className="text-2xl font-bold text-white text-center mb-8">
-                Enter Your GPA
-              </h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-white/80 font-medium mb-2">
-                    HSC GPA (out of 5.00)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    max="5"
-                    value={hscGPA}
-                    onChange={(e) => setHscGPA(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
-                    placeholder="e.g., 5.00"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-white/80 font-medium mb-2">
-                    SSC GPA (out of 5.00)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    max="5"
-                    value={sscGPA}
-                    onChange={(e) => setSscGPA(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
-                    placeholder="e.g., 5.00"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => setStep(2)}
-                  className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all duration-300 border border-white/20"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={calculateGPAMarks}
-                  disabled={!hscGPA || !sscGPA}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-full font-semibold shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/70 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                  Calculate
-                </button>
-              </div>
-            </div>
-          )}
-
           {step === 4 && !showResults && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               <div className="bg-gradient-to-br from-red-500/20 to-red-700/20 border border-red-500/30 rounded-2xl p-6 text-center">
                 <p className="text-white/70 text-sm mb-2">Your GPA Contribution</p>
                 <p className="text-4xl font-bold text-white">{gpaMarks.toFixed(2)}</p>
@@ -508,7 +1136,7 @@ const GPACalculator = () => {
           )}
 
           {step === 4 && showResults && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               <h3 className="text-2xl font-bold text-white text-center mb-6">
                 Your Results
               </h3>
@@ -530,10 +1158,10 @@ const GPACalculator = () => {
                 <p className="text-white/60 text-sm">out of 200</p>
               </div>
 
-              <div className={`${getZoneInfo().bgColor} border-2 ${getZoneInfo().borderColor} rounded-2xl p-6`}>
+              <div className={getZoneInfo().bgColor + ' border-2 ' + getZoneInfo().borderColor + ' rounded-2xl p-6'}>
                 <div className="flex items-center justify-center gap-3 mb-3">
                   <span className="text-4xl">{getZoneInfo().icon}</span>
-                  <h4 className={`text-2xl font-bold bg-gradient-to-r ${getZoneInfo().color} bg-clip-text text-transparent`}>
+                  <h4 className={'text-2xl font-bold bg-gradient-to-r ' + getZoneInfo().color + ' bg-clip-text text-transparent'}>
                     {getZoneInfo().zone}
                   </h4>
                 </div>
@@ -552,7 +1180,7 @@ const GPACalculator = () => {
           )}
 
           {step === 5 && (
-            <div className="text-center space-y-6 animate-fade-in">
+            <div className="text-center space-y-6">
               <div className="w-24 h-24 mx-auto bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center shadow-lg">
                 <AlertCircle className="w-12 h-12 text-white" />
               </div>
@@ -570,7 +1198,7 @@ const GPACalculator = () => {
           )}
 
           {step === 6 && !selectedUniversity && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               <h3 className="text-2xl font-bold text-white text-center mb-8">
                 Select University
               </h3>
@@ -591,7 +1219,7 @@ const GPACalculator = () => {
                     className="group p-6 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/30"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-14 h-14 bg-gradient-to-br ${uni.gradient} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      <div className={'w-14 h-14 bg-gradient-to-br ' + uni.gradient + ' rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform'}>
                         <Building2 className="w-7 h-7 text-white" />
                       </div>
                       <div className="text-left flex-1">
@@ -615,7 +1243,7 @@ const GPACalculator = () => {
           )}
 
           {step === 7 && selectedUniversity === 'dhaka' && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               <div className="text-center mb-6">
                 <div className="inline-block px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full mb-4">
                   <span className="text-purple-300 font-semibold">Dhaka University</span>
@@ -662,7 +1290,7 @@ const GPACalculator = () => {
           )}
 
           {step === 8 && selectedUniversity === 'jahangirnagar' && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               <div className="text-center mb-6">
                 <div className="inline-block px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-full mb-4">
                   <span className="text-indigo-300 font-semibold">Jahangirnagar University</span>
@@ -706,16 +1334,15 @@ const GPACalculator = () => {
           )}
 
           {step === 10 && selectedUniversity && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               <div className="text-center mb-6">
-                <div className={`inline-block px-4 py-2 bg-gradient-to-r ${universities.find(u => u.key === selectedUniversity)?.gradient} bg-opacity-20 border border-white/30 rounded-full mb-4`}>
+                <div className={'inline-block px-4 py-2 bg-gradient-to-r ' + (universities.find(u => u.key === selectedUniversity)?.gradient || '') + ' bg-opacity-20 border border-white/30 rounded-full mb-4'}>
                   <span className="text-white font-semibold">{getUniversityDisplayName()}</span>
                 </div>
                 <h3 className="text-2xl font-bold text-white">
                   Enter Your Academic Credentials
                 </h3>
                 
-                {/* Second-time candidates notification - only for non-Dhaka universities */}
                 {selectedUniversity !== 'dhaka' && (
                   <div className="mt-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl p-4 backdrop-blur-sm">
                     <div className="flex items-center justify-center gap-3">
@@ -800,8 +1427,7 @@ const GPACalculator = () => {
               </div>
 
               {showResultBox && (
-                <div className="mt-6 animate-fade-in">
-                  {/* University Header */}
+                <div className="mt-6">
                   <div className="bg-gradient-to-r from-white/10 to-white/5 border border-white/20 rounded-2xl p-6 mb-4">
                     <div className="text-center mb-4">
                       <h4 className="text-lg font-semibold text-white/70 mb-2">Eligibility Assessment</h4>
@@ -811,7 +1437,6 @@ const GPACalculator = () => {
                       )}
                     </div>
 
-                    {/* GPA Display */}
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                         <p className="text-white/60 text-xs mb-1">SSC GPA</p>
@@ -829,15 +1454,14 @@ const GPACalculator = () => {
                     </div>
                   </div>
 
-                  {/* Eligibility Status */}
-                  <div className={`p-6 rounded-2xl border-2 ${eligibilityStatus === 'eligible' ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+                  <div className={'p-6 rounded-2xl border-2 ' + (eligibilityStatus === 'eligible' ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30')}>
                     <div className="flex items-center justify-center gap-3 mb-3">
                       {eligibilityStatus === 'eligible' ? (
                         <CheckCircle className="w-8 h-8 text-green-400" />
                       ) : (
                         <AlertCircle className="w-8 h-8 text-red-400" />
                       )}
-                      <h4 className={`text-xl font-bold ${eligibilityStatus === 'eligible' ? 'text-green-400' : 'text-red-400'}`}>
+                      <h4 className={'text-xl font-bold ' + (eligibilityStatus === 'eligible' ? 'text-green-400' : 'text-red-400')}>
                         {eligibilityStatus === 'eligible' ? 'Eligible' : 'Not Eligible'}
                       </h4>
                     </div>
@@ -845,7 +1469,6 @@ const GPACalculator = () => {
                       {resultMessage}
                     </p>
 
-                    {/* Additional Info for specific universities */}
                     {eligibilityStatus === 'eligible' && (selectedUniversity === 'rajshahi' || selectedUniversity === 'gst') && (
                       <div className="mt-4 pt-4 border-t border-white/10">
                         <p className="text-white/70 text-sm text-center italic">
@@ -914,9 +1537,9 @@ const GPACalculator = () => {
           )}
 
           {step === 11 && (selectedUniversity === 'jahangirnagar' || selectedUniversity === 'chittagong') && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               <div className="text-center mb-6">
-                <div className={`inline-block px-4 py-2 bg-gradient-to-r ${universities.find(u => u.key === selectedUniversity)?.gradient} bg-opacity-20 border border-white/30 rounded-full mb-4`}>
+                <div className={'inline-block px-4 py-2 bg-gradient-to-r ' + (universities.find(u => u.key === selectedUniversity)?.gradient || '') + ' bg-opacity-20 border border-white/30 rounded-full mb-4'}>
                   <span className="text-white font-semibold">{getUniversityDisplayName()}</span>
                 </div>
                 <h3 className="text-2xl font-bold text-white">
@@ -966,7 +1589,7 @@ const GPACalculator = () => {
               </div>
 
               {showResultBox && (
-                <div className="mt-6 animate-fade-in">
+                <div className="mt-6">
                   <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-700/20 border-2 border-emerald-500/30 rounded-2xl p-8">
                     <div className="text-center mb-6">
                       <h4 className="text-white/70 text-sm mb-2">Final Assessment</h4>
@@ -1011,7 +1634,7 @@ const GPACalculator = () => {
           )}
 
           {step === 12 && selectedUniversity === 'agri' && (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6">
               <div className="text-center mb-6">
                 <div className="inline-block px-4 py-2 bg-gradient-to-r from-green-600 to-green-800 bg-opacity-20 border border-white/30 rounded-full mb-4">
                   <span className="text-white font-semibold">Agricultural University Cluster</span>
@@ -1075,7 +1698,7 @@ const GPACalculator = () => {
               </div>
 
               {showResultBox && (
-                <div className="mt-6 animate-fade-in">
+                <div className="mt-6">
                   <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-700/20 border-2 border-emerald-500/30 rounded-2xl p-8">
                     <div className="text-center mb-6">
                       <h4 className="text-white/70 text-sm mb-2">GPA Contribution Analysis</h4>
