@@ -945,7 +945,7 @@ const GPACalculator = () => {
       );
     }
 
-    // ========== UPGRADED ADMISSION POLICY SECTION ==========
+    // ========== UPGRADED ADMISSION POLICY SECTION (MOBILE OPTIMIZED) ==========
     if (medicalStep === 'policy') {
       return (
         <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
@@ -957,65 +957,56 @@ const GPACalculator = () => {
 
           <div className="w-full max-w-4xl relative z-10">
             {/* Main container with glassmorphism */}
-            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-6 md:p-10 transition-all duration-500 animate-fade-in">
+            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-4 md:p-10 transition-all duration-500 animate-fade-in">
               
               {/* Title Section with gradient text */}
-              <div className="text-center mb-8" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
-                <div className="inline-flex items-center justify-center gap-3 mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/50 animate-pulse">
-                    <Info className="w-8 h-8 text-white" />
+              <div className="text-center mb-6 md:mb-8" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
+                <div className="inline-flex items-center justify-center gap-3 mb-3 md:mb-4">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/50 animate-pulse">
+                    <Info className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   </div>
                 </div>
                 
-                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 text-transparent bg-clip-text mb-3 animate-gradient">
+                <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 text-transparent bg-clip-text mb-2 md:mb-3 animate-gradient px-2">
                   ভর্তি নীতিমালা (Medical)
                 </h1>
                 
-                <p className="text-white/70 text-sm md:text-base" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
+                <p className="text-white/70 text-xs md:text-base px-2" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
                   এই নীতিমালা ২০২৫-২০২৬ শিক্ষাবর্ষের জন্য প্রযোজ্য
                 </p>
               </div>
 
-              {/* Policy Table Container with horizontal scroll */}
-              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-                <div className="backdrop-blur-md bg-white/10 border border-white/20 shadow-xl rounded-2xl p-6 min-w-[600px]">
-                  <table className="w-full" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
-                    <thead>
-                      <tr className="border-b border-white/20">
-                        <th className="text-left py-4 px-4 text-white/90 font-bold text-lg bg-white/5">
-                          বিষয়
-                        </th>
-                        <th className="text-left py-4 px-4 text-white/90 font-bold text-lg bg-white/5">
-                          তথ্য
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {policyData.map((row, index) => (
-                        <tr 
-                          key={index} 
-                          className={`border-b border-white/10 transition-colors duration-200 hover:bg-white/20 ${
-                            index % 2 === 0 ? 'bg-white/5' : ''
-                          }`}
-                        >
-                          <td className="py-4 px-4 text-white/80 font-semibold align-top">
-                            {row.subject}
-                          </td>
-                          <td className="py-4 px-4 text-white/70 leading-relaxed">
-                            {row.info}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              {/* Policy Cards for Mobile - No horizontal scroll */}
+              <div className="space-y-3 md:space-y-4">
+                {policyData.map((row, index) => (
+                  <div 
+                    key={index}
+                    className="backdrop-blur-md bg-white/10 border border-white/20 shadow-xl rounded-xl p-4 md:p-5 transition-all duration-200 hover:bg-white/15 hover:scale-[1.02]"
+                    style={{ fontFamily: 'Kalpurush, sans-serif' }}
+                  >
+                    {/* Subject heading */}
+                    <div className="flex items-start gap-2 mb-2">
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-400 rounded-full mt-1.5 md:mt-2 flex-shrink-0"></div>
+                      <h3 className="text-emerald-300 font-bold text-sm md:text-base leading-tight">
+                        {row.subject}
+                      </h3>
+                    </div>
+                    
+                    {/* Info content */}
+                    <div className="pl-3.5 md:pl-4">
+                      <p className="text-white/80 text-xs md:text-sm leading-relaxed">
+                        {row.info}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* Info Note */}
-              <div className="mt-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-5">
-                <div className="flex items-start gap-3">
-                  <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-white/80 text-sm" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
+              <div className="mt-4 md:mt-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-4 md:p-5">
+                <div className="flex items-start gap-2 md:gap-3">
+                  <Info className="w-4 h-4 md:w-5 md:h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-white/80 text-xs md:text-sm leading-relaxed" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
                     সকল তথ্য সাপেক্ষে পরিবর্তনযোগ্য। চূড়ান্ত তথ্যের জন্য অফিসিয়াল নোটিশ দেখুন।
                   </p>
                 </div>
@@ -1024,7 +1015,7 @@ const GPACalculator = () => {
               {/* Back Button */}
               <button
                 onClick={() => setMedicalStep('main')}
-                className="w-full mt-6 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all duration-300 border border-white/20 flex items-center justify-center gap-2 group"
+                className="w-full mt-4 md:mt-6 px-6 py-3 bg-white/10 hover:bg-white/20 active:bg-white/25 text-white rounded-full font-semibold transition-all duration-300 border border-white/20 flex items-center justify-center gap-2 group"
               >
                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                 Back
