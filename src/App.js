@@ -416,6 +416,20 @@ const GPACalculator = () => {
     { name: 'Agricultural University Cluster', key: 'agri', gradient: 'from-green-600 to-green-800', abbr: 'AGRI' }
   ];
 
+  // Medical admission policy data
+  const policyData = [
+    { subject: 'ভর্তি পরীক্ষার তারিখ', info: '১২ ডিসেম্বর ২০২৫' },
+    { subject: 'অনলাইন এ আবেদন শুরু', info: 'ডেট প্রকাশ করা হবে' },
+    { subject: 'অনলাইন এ আবেদন শেষ', info: 'ডেট প্রকাশ করা হবে' },
+    { subject: 'প্রবেশ পত্র ডাউনলোড এর শেষ সময়', info: 'ডেট প্রকাশ করা হবে' },
+    { subject: 'ভর্তি ফি', info: '১০০০ টাকা' },
+    { subject: 'আবেদন যোগ্যতা', info: 'HSC+SSC = ৮.৫০ এবং আলাদা ভাবে ন্যূনতম প্রতিটি পরীক্ষায় ৪.০০ থাকতে হবে। সাথে HSC বায়োলজিতে কমপক্ষে ৩.৫০ GPA থাকতে হবে।' },
+    { subject: 'পরীক্ষার ধরন', info: 'লিখিত ভর্তি পরীক্ষায় ১০০ টি প্রশ্ন (এইচএসসি বা সমমান সিলেবাস অনুযায়ী)। প্রতিটি ১ নম্বর করিয়া মোট ১০০ নম্বর। বিষয়ভিত্তিক বিভাজনঃ জীববিজ্ঞান ৩০, রসায়ন ২৫, পদার্থবিজ্ঞান ২৫, ইংরেজি ১৫ এবং সাধারণ জ্ঞান ও মানবিক গুণাবলী ৫।' },
+    { subject: 'পরীক্ষার সময়', info: '১ ঘণ্টা ১৫ মিনিট' },
+    { subject: 'পাস মার্ক্স', info: '৪০' },
+    { subject: 'নেতিবাচক মার্কিং', info: 'প্রতিটি ভুল উত্তরের জন্য ০.২৫ নম্বর কর্তন করা হবে।' }
+  ];
+
   if (step === 3 && admissionType === 'medical') {
     if (medicalStep === 'main') {
       return (
@@ -931,55 +945,96 @@ const GPACalculator = () => {
       );
     }
 
+    // ========== UPGRADED ADMISSION POLICY SECTION ==========
     if (medicalStep === 'policy') {
       return (
         <div className="min-h-screen bg-gradient-to-br from-black via-red-950 to-black flex items-center justify-center p-4 overflow-hidden relative">
+          {/* Animated background effects */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
           </div>
 
-          <div className="w-full max-w-2xl relative z-10">
-            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-8">
-              <div className="space-y-6">
-                <div className="text-center">
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/50 mb-6">
-                    <Info className="w-12 h-12 text-white animate-pulse" />
-                  </div>
-                  <h3 className="text-3xl font-bold text-white mb-4">
-                    ভর্তি নীতিমালা
-                  </h3>
-                </div>
-
-                <div className="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border-2 border-emerald-500/30 rounded-2xl p-10 text-center backdrop-blur-sm">
-                  <div className="mb-6">
-                    <div className="text-6xl mb-4">🔜</div>
-                    <p className="text-2xl font-bold text-white mb-3">
-                      এই ফিচারটি খুব শীঘ্রই আসছে।
-                    </p>
-                    <p className="text-white/70">
-                      আমরা শীঘ্রই সম্পূর্ণ ভর্তি নীতিমালা প্রকাশ করব
-                    </p>
-                  </div>
-                  
-                  <div className="inline-block px-6 py-3 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
-                    <span className="text-emerald-300 font-semibold">Coming Soon</span>
+          <div className="w-full max-w-4xl relative z-10">
+            {/* Main container with glassmorphism */}
+            <div className="backdrop-blur-xl bg-white/5 rounded-3xl border border-white/10 shadow-2xl p-6 md:p-10 transition-all duration-500 animate-fade-in">
+              
+              {/* Title Section with gradient text */}
+              <div className="text-center mb-8" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
+                <div className="inline-flex items-center justify-center gap-3 mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/50 animate-pulse">
+                    <Info className="w-8 h-8 text-white" />
                   </div>
                 </div>
-
-                <button
-                  onClick={() => setMedicalStep('main')}
-                  className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all duration-300 border border-white/20 flex items-center justify-center gap-2"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                  Back
-                </button>
+                
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-400 text-transparent bg-clip-text mb-3 animate-gradient">
+                  ভর্তি নীতিমালা (Medical)
+                </h1>
+                
+                <p className="text-white/70 text-sm md:text-base" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
+                  এই নীতিমালা ২০২৫-২০২৬ শিক্ষাবর্ষের জন্য প্রযোজ্য
+                </p>
               </div>
+
+              {/* Policy Table Container with horizontal scroll */}
+              <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                <div className="backdrop-blur-md bg-white/10 border border-white/20 shadow-xl rounded-2xl p-6 min-w-[600px]">
+                  <table className="w-full" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
+                    <thead>
+                      <tr className="border-b border-white/20">
+                        <th className="text-left py-4 px-4 text-white/90 font-bold text-lg bg-white/5">
+                          বিষয়
+                        </th>
+                        <th className="text-left py-4 px-4 text-white/90 font-bold text-lg bg-white/5">
+                          তথ্য
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {policyData.map((row, index) => (
+                        <tr 
+                          key={index} 
+                          className={`border-b border-white/10 transition-colors duration-200 hover:bg-white/20 ${
+                            index % 2 === 0 ? 'bg-white/5' : ''
+                          }`}
+                        >
+                          <td className="py-4 px-4 text-white/80 font-semibold align-top">
+                            {row.subject}
+                          </td>
+                          <td className="py-4 px-4 text-white/70 leading-relaxed">
+                            {row.info}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Info Note */}
+              <div className="mt-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-5">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-white/80 text-sm" style={{ fontFamily: 'Kalpurush, sans-serif' }}>
+                    সকল তথ্য সাপেক্ষে পরিবর্তনযোগ্য। চূড়ান্ত তথ্যের জন্য অফিসিয়াল নোটিশ দেখুন।
+                  </p>
+                </div>
+              </div>
+
+              {/* Back Button */}
+              <button
+                onClick={() => setMedicalStep('main')}
+                className="w-full mt-6 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-semibold transition-all duration-300 border border-white/20 flex items-center justify-center gap-2 group"
+              >
+                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                Back
+              </button>
             </div>
           </div>
         </div>
       );
     }
+    // ========== END OF UPGRADED POLICY SECTION ==========
   }
 
   return (
@@ -1745,6 +1800,8 @@ const GPACalculator = () => {
       </div>
 
       <style jsx>{`
+        @import url('https://fonts.googleapis.com/css2?family=Kalpurush&display=swap');
+        
         @keyframes fade-in {
           from {
             opacity: 0;
@@ -1756,8 +1813,22 @@ const GPACalculator = () => {
           }
         }
         
+        @keyframes gradient {
+          0%, 100% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+        }
+        
         .animate-fade-in {
           animation: fade-in 0.5s ease-out;
+        }
+        
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient 3s ease infinite;
         }
         
         input::-webkit-outer-spin-button,
@@ -1768,6 +1839,24 @@ const GPACalculator = () => {
         
         input[type=number] {
           -moz-appearance: textfield;
+        }
+        
+        /* Custom scrollbar styling */
+        .scrollbar-thin::-webkit-scrollbar {
+          height: 8px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 4px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
         }
       `}</style>
     </div>
